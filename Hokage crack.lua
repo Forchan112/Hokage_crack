@@ -1,7 +1,5 @@
 -- ============================================================
---              TSUM UTILITY SCRIPT  —  v1.0
---        ESP | Noclip | Insta Grab | TP Drop | Auto Farm
---       Auto Sell | Themes | Configs | Dashboard
+--              MONOLITH X TSUM  —  Colaba Style
 -- ============================================================
 
 local Players = game:GetService("Players")
@@ -13,29 +11,18 @@ local Camera = workspace.CurrentCamera
 local UIS = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
--- ===================== НАСТРОЙКИ ПО УМОЛЧАНИЮ =====================
+-- ===================== НАСТРОЙКИ =====================
 local Settings = {
-    ESP = {
-        Enabled = false,
-        Mode = "Box",       -- "Box", "Corner", "Text", "Tracer"
-        Color = Color3.fromRGB(255, 215, 0),
-        ShowName = true,
-        ShowDistance = true,
-    },
-    Noclip = false,
-    InstaGrab = false,
-    TPtoDrop = false,
-    AutoFarm = false,
-    AutoSell = false,
-    FarmDelay = 1.2,
-    SellDelay = 1.5,
-    Theme = "Dark",        -- "Dark", "Light", "Blue", "Pink"
-    LegendaryKeyword = "Legendary",
-    ScanInterval = 2,
+    ESP = { Enabled = false, Mode = "Box", Color = Color3.fromRGB(255, 215, 0) },
+    Misc = { Noclip = false, Speed = 16 },
+    Autoloot = { Enabled = false, Delay = 1.2 },
+    Theme = { Accent = Color3.fromRGB(255, 215, 0), Background = Color3.fromRGB(20, 20, 35), Floral = false },
+    Configs = { Current = "Default" },
 }
 
+local ConfigFileName = "Monolith_Config.json"
+
 -- ===================== ЗАГРУЗКА КОНФИГА =====================
-local ConfigFileName = "TSUM_Config.json"
 local function loadConfig()
     if readfile then
         local success, data = pcall(readfile, ConfigFileName)
@@ -64,16 +51,16 @@ end
 
 -- ===================== UI =====================
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TSUMUtility"
+screenGui.Name = "MonolithUI"
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 420, 0, 580)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -290)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+mainFrame.Size = UDim2.new(0, 420, 0, 520)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -260)
+mainFrame.BackgroundColor3 = Settings.Theme.Background
 mainFrame.BackgroundTransparency = 0.15
 mainFrame.BorderSizePixel = 2
-mainFrame.BorderColor3 = Color3.fromRGB(255, 215, 0)
+mainFrame.BorderColor3 = Settings.Theme.Accent
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
@@ -82,144 +69,141 @@ mainFrame.Parent = screenGui
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 0)
-title.Text = "⚡ TSUM UTILITY"
-title.TextColor3 = Color3.fromRGB(255, 215, 0)
+title.Text = "Monolith x Tsum Colaba"
+title.TextColor3 = Settings.Theme.Accent
 title.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0.3)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 26
+title.TextSize = 20
 title.Parent = mainFrame
 
--- Кнопка закрытия
+-- Закрытие
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 32, 0, 32)
-closeBtn.Position = UDim2.new(1, -36, 0, 4)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
 closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 20
+closeBtn.TextSize = 18
 closeBtn.Parent = mainFrame
 closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- Информационная панель (Dashboard)
-local dashFrame = Instance.new("Frame")
-dashFrame.Size = UDim2.new(0.94, 0, 0, 80)
-dashFrame.Position = UDim2.new(0.03, 0, 0, 48)
-dashFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0.3)
-dashFrame.BorderSizePixel = 1
-dashFrame.BorderColor3 = Color3.fromRGB(100, 100, 120)
-dashFrame.Parent = mainFrame
-
-local dashTitle = Instance.new("TextLabel")
-dashTitle.Size = UDim2.new(0.3, 0, 0, 20)
-dashTitle.Position = UDim2.new(0.02, 0, 0, 2)
-dashTitle.Text = "📊 ДАШБОРД"
-dashTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
-dashTitle.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-dashTitle.Font = Enum.Font.GothamBold
-dashTitle.TextSize = 14
-dashTitle.TextXAlignment = Enum.TextXAlignment.Left
-dashTitle.Parent = dashFrame
-
-local balanceLabel = Instance.new("TextLabel")
-balanceLabel.Size = UDim2.new(0.4, 0, 0, 20)
-balanceLabel.Position = UDim2.new(0.02, 0, 0, 22)
-balanceLabel.Text = "💰 Баланс: ..."
-balanceLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
-balanceLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-balanceLabel.Font = Enum.Font.Gotham
-balanceLabel.TextSize = 14
-balanceLabel.TextXAlignment = Enum.TextXAlignment.Left
-balanceLabel.Parent = dashFrame
-
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(0.5, 0, 0, 20)
-statusLabel.Position = UDim2.new(0.02, 0, 0, 42)
-statusLabel.Text = "📦 Легендарок: 0"
-statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-statusLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.TextSize = 14
-statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-statusLabel.Parent = dashFrame
-
-local farmStatus = Instance.new("TextLabel")
-farmStatus.Size = UDim2.new(0.5, 0, 0, 20)
-farmStatus.Position = UDim2.new(0.5, 0, 0, 42)
-farmStatus.Text = "⏳ Фарм: Выкл"
-farmStatus.TextColor3 = Color3.fromRGB(255, 200, 100)
-farmStatus.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-farmStatus.Font = Enum.Font.Gotham
-farmStatus.TextSize = 14
-farmStatus.TextXAlignment = Enum.TextXAlignment.Left
-farmStatus.Parent = dashFrame
-
--- Вкладки (переключение)
-local tabs = {"ESP", "Телепорты", "Фарм", "Продажа", "Темы", "Конфиги"}
+-- ===================== ВКЛАДКИ =====================
+local tabs = {"Menu", "ESP", "Misc", "Autoloot", "Settings"}
 local currentTab = 1
 local tabButtons = {}
-local tabContent = {}
+local tabContents = {}
 
 for i, name in ipairs(tabs) do
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.15, 0, 0, 28)
-    btn.Position = UDim2.new(0.02 + (i-1)*0.16, 0, 0, 136)
+    btn.Size = UDim2.new(0.18, 0, 0, 30)
+    btn.Position = UDim2.new(0.02 + (i-1)*0.19, 0, 0, 46)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    btn.BackgroundColor3 = (i == 1) and Settings.Theme.Accent or Color3.fromRGB(40, 40, 60)
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 12
+    btn.TextSize = 13
     btn.Parent = mainFrame
     tabButtons[i] = btn
-    
     btn.MouseButton1Click:Connect(function()
         currentTab = i
-        for j, cont in pairs(tabContent) do
+        for j, cont in pairs(tabContents) do
             cont.Visible = (j == i)
         end
         for j, b in pairs(tabButtons) do
-            b.BackgroundColor3 = (j == i) and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(50, 50, 70)
+            b.BackgroundColor3 = (j == i) and Settings.Theme.Accent or Color3.fromRGB(40, 40, 60)
         end
     end)
 end
 
--- Содержимое вкладок
 local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(0.94, 0, 0, 380)
-contentFrame.Position = UDim2.new(0.03, 0, 0, 172)
+contentFrame.Size = UDim2.new(0.94, 0, 0, 410)
+contentFrame.Position = UDim2.new(0.03, 0, 0, 82)
 contentFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0.2)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
--- Вкладка ESP
+-- ===================== ВКЛАДКА MENU =====================
+local menuTab = Instance.new("Frame")
+menuTab.Size = UDim2.new(1, 0, 1, 0)
+menuTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+menuTab.Visible = true
+menuTab.Parent = contentFrame
+tabContents[1] = menuTab
+
+local menuLabel = Instance.new("TextLabel")
+menuLabel.Size = UDim2.new(1, 0, 0, 30)
+menuLabel.Position = UDim2.new(0, 0, 0, 10)
+menuLabel.Text = "📊 Dashboard"
+menuLabel.TextColor3 = Settings.Theme.Accent
+menuLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+menuLabel.Font = Enum.Font.GothamBold
+menuLabel.TextSize = 18
+menuLabel.TextXAlignment = Enum.TextXAlignment.Left
+menuLabel.Parent = menuTab
+
+local balLabel = Instance.new("TextLabel")
+balLabel.Size = UDim2.new(0.5, 0, 0, 24)
+balLabel.Position = UDim2.new(0, 5, 0, 45)
+balLabel.Text = "💰 Balance: ..."
+balLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+balLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+balLabel.Font = Enum.Font.Gotham
+balLabel.TextSize = 15
+balLabel.TextXAlignment = Enum.TextXAlignment.Left
+balLabel.Parent = menuTab
+
+local foundLabel = Instance.new("TextLabel")
+foundLabel.Size = UDim2.new(0.5, 0, 0, 24)
+foundLabel.Position = UDim2.new(0, 5, 0, 70)
+foundLabel.Text = "📦 Legendaries: 0"
+foundLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+foundLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+foundLabel.Font = Enum.Font.Gotham
+foundLabel.TextSize = 15
+foundLabel.TextXAlignment = Enum.TextXAlignment.Left
+foundLabel.Parent = menuTab
+
+local lootLabel = Instance.new("TextLabel")
+lootLabel.Size = UDim2.new(0.5, 0, 0, 24)
+lootLabel.Position = UDim2.new(0, 5, 0, 95)
+lootLabel.Text = "⏳ Autoloot: Off"
+lootLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+lootLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+lootLabel.Font = Enum.Font.Gotham
+lootLabel.TextSize = 15
+lootLabel.TextXAlignment = Enum.TextXAlignment.Left
+lootLabel.Parent = menuTab
+
+-- ===================== ВКЛАДКА ESP =====================
 local espTab = Instance.new("Frame")
 espTab.Size = UDim2.new(1, 0, 1, 0)
 espTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-espTab.Visible = true
+espTab.Visible = false
 espTab.Parent = contentFrame
-tabContent[1] = espTab
+tabContents[2] = espTab
 
 local espToggle = Instance.new("TextButton")
 espToggle.Size = UDim2.new(0.45, 0, 0, 30)
-espToggle.Position = UDim2.new(0.03, 0, 0, 5)
-espToggle.Text = "ESP: ВЫКЛ"
+espToggle.Position = UDim2.new(0.03, 0, 0, 10)
+espToggle.Text = "ESP: OFF"
 espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
+espToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 espToggle.Font = Enum.Font.Gotham
 espToggle.TextSize = 14
 espToggle.Parent = espTab
 espToggle.MouseButton1Click:Connect(function()
     Settings.ESP.Enabled = not Settings.ESP.Enabled
-    espToggle.Text = Settings.ESP.Enabled and "ESP: ВКЛ" or "ESP: ВЫКЛ"
+    espToggle.Text = Settings.ESP.Enabled and "ESP: ON" or "ESP: OFF"
     saveConfig()
 end)
 
 local modeLabel = Instance.new("TextLabel")
 modeLabel.Size = UDim2.new(0.4, 0, 0, 22)
-modeLabel.Position = UDim2.new(0.03, 0, 0, 40)
-modeLabel.Text = "Режим: " .. Settings.ESP.Mode
+modeLabel.Position = UDim2.new(0.03, 0, 0, 46)
+modeLabel.Text = "Mode: " .. Settings.ESP.Mode
 modeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 modeLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
 modeLabel.Font = Enum.Font.Gotham
@@ -229,10 +213,10 @@ modeLabel.Parent = espTab
 
 local modeBtn = Instance.new("TextButton")
 modeBtn.Size = UDim2.new(0.3, 0, 0, 24)
-modeBtn.Position = UDim2.new(0.45, 0, 0, 40)
-modeBtn.Text = "Сменить"
+modeBtn.Position = UDim2.new(0.45, 0, 0, 46)
+modeBtn.Text = "Change"
 modeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-modeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+modeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 modeBtn.Font = Enum.Font.Gotham
 modeBtn.TextSize = 12
 modeBtn.Parent = espTab
@@ -245,378 +229,383 @@ modeBtn.MouseButton1Click:Connect(function()
             break
         end
     end
-    modeLabel.Text = "Режим: " .. Settings.ESP.Mode
+    modeLabel.Text = "Mode: " .. Settings.ESP.Mode
     saveConfig()
 end)
 
-local showName = Instance.new("TextButton")
-showName.Size = UDim2.new(0.45, 0, 0, 26)
-showName.Position = UDim2.new(0.03, 0, 0, 70)
-showName.Text = "Имя: Вкл"
-showName.TextColor3 = Color3.fromRGB(255, 255, 255)
-showName.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-showName.Font = Enum.Font.Gotham
-showName.TextSize = 13
-showName.Parent = espTab
-showName.MouseButton1Click:Connect(function()
-    Settings.ESP.ShowName = not Settings.ESP.ShowName
-    showName.Text = Settings.ESP.ShowName and "Имя: Вкл" or "Имя: Выкл"
-    saveConfig()
-end)
-
-local showDist = Instance.new("TextButton")
-showDist.Size = UDim2.new(0.45, 0, 0, 26)
-showDist.Position = UDim2.new(0.52, 0, 0, 70)
-showDist.Text = "Дист.: Вкл"
-showDist.TextColor3 = Color3.fromRGB(255, 255, 255)
-showDist.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-showDist.Font = Enum.Font.Gotham
-showDist.TextSize = 13
-showDist.Parent = espTab
-showDist.MouseButton1Click:Connect(function()
-    Settings.ESP.ShowDistance = not Settings.ESP.ShowDistance
-    showDist.Text = Settings.ESP.ShowDistance and "Дист.: Вкл" or "Дист.: Выкл"
-    saveConfig()
-end)
-
--- Вкладка Телепорты
-local tpTab = Instance.new("Frame")
-tpTab.Size = UDim2.new(1, 0, 1, 0)
-tpTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-tpTab.Visible = false
-tpTab.Parent = contentFrame
-tabContent[2] = tpTab
-
-local btnNoclip = Instance.new("TextButton")
-btnNoclip.Size = UDim2.new(0.45, 0, 0, 30)
-btnNoclip.Position = UDim2.new(0.03, 0, 0, 5)
-btnNoclip.Text = "Ноклип: Выкл"
-btnNoclip.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnNoclip.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-btnNoclip.Font = Enum.Font.Gotham
-btnNoclip.TextSize = 14
-btnNoclip.Parent = tpTab
-btnNoclip.MouseButton1Click:Connect(function()
-    Settings.Noclip = not Settings.Noclip
-    btnNoclip.Text = Settings.Noclip and "Ноклип: Вкл" or "Ноклип: Выкл"
-    if Settings.Noclip then
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
+local colorBtn = Instance.new("TextButton")
+colorBtn.Size = UDim2.new(0.3, 0, 0, 24)
+colorBtn.Position = UDim2.new(0.45, 0, 0, 76)
+colorBtn.Text = "Change Color"
+colorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+colorBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+colorBtn.Font = Enum.Font.Gotham
+colorBtn.TextSize = 12
+colorBtn.Parent = espTab
+colorBtn.MouseButton1Click:Connect(function()
+    local colors = {
+        Color3.fromRGB(255, 215, 0),
+        Color3.fromRGB(255, 0, 0),
+        Color3.fromRGB(0, 255, 0),
+        Color3.fromRGB(0, 150, 255),
+        Color3.fromRGB(255, 0, 255),
+    }
+    for i, c in ipairs(colors) do
+        if c == Settings.ESP.Color then
+            local next = (i % #colors) + 1
+            Settings.ESP.Color = colors[next]
+            break
         end
-    else
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
+    end
+    saveConfig()
+end)
+
+-- ===================== ВКЛАДКА MISC =====================
+local miscTab = Instance.new("Frame")
+miscTab.Size = UDim2.new(1, 0, 1, 0)
+miscTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+miscTab.Visible = false
+miscTab.Parent = contentFrame
+tabContents[3] = miscTab
+
+local noclipBtn = Instance.new("TextButton")
+noclipBtn.Size = UDim2.new(0.45, 0, 0, 30)
+noclipBtn.Position = UDim2.new(0.03, 0, 0, 10)
+noclipBtn.Text = "Noclip: OFF"
+noclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+noclipBtn.Font = Enum.Font.Gotham
+noclipBtn.TextSize = 14
+noclipBtn.Parent = miscTab
+noclipBtn.MouseButton1Click:Connect(function()
+    Settings.Misc.Noclip = not Settings.Misc.Noclip
+    noclipBtn.Text = Settings.Misc.Noclip and "Noclip: ON" or "Noclip: OFF"
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = not Settings.Misc.Noclip
             end
         end
     end
     saveConfig()
 end)
 
-local btnInstaGrab = Instance.new("TextButton")
-btnInstaGrab.Size = UDim2.new(0.45, 0, 0, 30)
-btnInstaGrab.Position = UDim2.new(0.52, 0, 0, 5)
-btnInstaGrab.Text = "Insta Grab: Выкл"
-btnInstaGrab.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnInstaGrab.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-btnInstaGrab.Font = Enum.Font.Gotham
-btnInstaGrab.TextSize = 14
-btnInstaGrab.Parent = tpTab
-btnInstaGrab.MouseButton1Click:Connect(function()
-    Settings.InstaGrab = not Settings.InstaGrab
-    btnInstaGrab.Text = Settings.InstaGrab and "Insta Grab: Вкл" or "Insta Grab: Выкл"
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.4, 0, 0, 22)
+speedLabel.Position = UDim2.new(0.03, 0, 0, 46)
+speedLabel.Text = "Speed: " .. Settings.Misc.Speed
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextSize = 14
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = miscTab
+
+local speedUp = Instance.new("TextButton")
+speedUp.Size = UDim2.new(0.15, 0, 0, 24)
+speedUp.Position = UDim2.new(0.4, 0, 0, 46)
+speedUp.Text = "+"
+speedUp.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedUp.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+speedUp.Font = Enum.Font.Gotham
+speedUp.TextSize = 16
+speedUp.Parent = miscTab
+speedUp.MouseButton1Click:Connect(function()
+    Settings.Misc.Speed = math.min(Settings.Misc.Speed + 2, 100)
+    speedLabel.Text = "Speed: " .. Settings.Misc.Speed
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = Settings.Misc.Speed
+    end
     saveConfig()
 end)
 
-local btnTPdrop = Instance.new("TextButton")
-btnTPdrop.Size = UDim2.new(0.45, 0, 0, 30)
-btnTPdrop.Position = UDim2.new(0.03, 0, 0, 45)
-btnTPdrop.Text = "ТП на дроп: Выкл"
-btnTPdrop.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnTPdrop.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-btnTPdrop.Font = Enum.Font.Gotham
-btnTPdrop.TextSize = 14
-btnTPdrop.Parent = tpTab
-btnTPdrop.MouseButton1Click:Connect(function()
-    Settings.TPtoDrop = not Settings.TPtoDrop
-    btnTPdrop.Text = Settings.TPtoDrop and "ТП на дроп: Вкл" or "ТП на дроп: Выкл"
+local speedDown = Instance.new("TextButton")
+speedDown.Size = UDim2.new(0.15, 0, 0, 24)
+speedDown.Position = UDim2.new(0.55, 0, 0, 46)
+speedDown.Text = "-"
+speedDown.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedDown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+speedDown.Font = Enum.Font.Gotham
+speedDown.TextSize = 16
+speedDown.Parent = miscTab
+speedDown.MouseButton1Click:Connect(function()
+    Settings.Misc.Speed = math.max(Settings.Misc.Speed - 2, 10)
+    speedLabel.Text = "Speed: " .. Settings.Misc.Speed
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = Settings.Misc.Speed
+    end
     saveConfig()
 end)
 
-local tpShopLabel = Instance.new("TextLabel")
-tpShopLabel.Size = UDim2.new(1, 0, 0, 22)
-tpShopLabel.Position = UDim2.new(0.03, 0, 0, 85)
-tpShopLabel.Text = "Телепорт к магазинам:"
-tpShopLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-tpShopLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-tpShopLabel.Font = Enum.Font.GothamBold
-tpShopLabel.TextSize = 14
-tpShopLabel.TextXAlignment = Enum.TextXAlignment.Left
-tpShopLabel.Parent = tpTab
+-- ===================== ВКЛАДКА AUTOLOOT =====================
+local lootTab = Instance.new("Frame")
+lootTab.Size = UDim2.new(1, 0, 1, 0)
+lootTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+lootTab.Visible = false
+lootTab.Parent = contentFrame
+tabContents[4] = lootTab
 
-local shopNames = {"НАЗАД", "ВТОРГА", "ШОФЕРС РИН", "ВАРКА", "КАРКА"}
-for i, name in ipairs(shopNames) do
+local lootToggle = Instance.new("TextButton")
+lootToggle.Size = UDim2.new(0.45, 0, 0, 30)
+lootToggle.Position = UDim2.new(0.03, 0, 0, 10)
+lootToggle.Text = "Autoloot: OFF"
+lootToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+lootToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+lootToggle.Font = Enum.Font.Gotham
+lootToggle.TextSize = 14
+lootToggle.Parent = lootTab
+lootToggle.MouseButton1Click:Connect(function()
+    Settings.Autoloot.Enabled = not Settings.Autoloot.Enabled
+    lootToggle.Text = Settings.Autoloot.Enabled and "Autoloot: ON" or "Autoloot: OFF"
+    if Settings.Autoloot.Enabled then
+        startAutoloot()
+    else
+        stopAutoloot()
+    end
+    saveConfig()
+end)
+
+local delayLabel = Instance.new("TextLabel")
+delayLabel.Size = UDim2.new(0.4, 0, 0, 22)
+delayLabel.Position = UDim2.new(0.03, 0, 0, 46)
+delayLabel.Text = "Delay: " .. Settings.Autoloot.Delay .. "s"
+delayLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+delayLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+delayLabel.Font = Enum.Font.Gotham
+delayLabel.TextSize = 14
+delayLabel.TextXAlignment = Enum.TextXAlignment.Left
+delayLabel.Parent = lootTab
+
+local delayUp = Instance.new("TextButton")
+delayUp.Size = UDim2.new(0.15, 0, 0, 24)
+delayUp.Position = UDim2.new(0.4, 0, 0, 46)
+delayUp.Text = "+"
+delayUp.TextColor3 = Color3.fromRGB(255, 255, 255)
+delayUp.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+delayUp.Font = Enum.Font.Gotham
+delayUp.TextSize = 16
+delayUp.Parent = lootTab
+delayUp.MouseButton1Click:Connect(function()
+    Settings.Autoloot.Delay = math.min(Settings.Autoloot.Delay + 0.2, 5)
+    delayLabel.Text = "Delay: " .. Settings.Autoloot.Delay .. "s"
+    saveConfig()
+end)
+
+local delayDown = Instance.new("TextButton")
+delayDown.Size = UDim2.new(0.15, 0, 0, 24)
+delayDown.Position = UDim2.new(0.55, 0, 0, 46)
+delayDown.Text = "-"
+delayDown.TextColor3 = Color3.fromRGB(255, 255, 255)
+delayDown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+delayDown.Font = Enum.Font.Gotham
+delayDown.TextSize = 16
+delayDown.Parent = lootTab
+delayDown.MouseButton1Click:Connect(function()
+    Settings.Autoloot.Delay = math.max(Settings.Autoloot.Delay - 0.2, 0.4)
+    delayLabel.Text = "Delay: " .. Settings.Autoloot.Delay .. "s"
+    saveConfig()
+end)
+
+-- ===================== ВКЛАДКА SETTINGS =====================
+local settingsTab = Instance.new("Frame")
+settingsTab.Size = UDim2.new(1, 0, 1, 0)
+settingsTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+settingsTab.Visible = false
+settingsTab.Parent = contentFrame
+tabContents[5] = settingsTab
+
+-- Accent Color
+local accLabel = Instance.new("TextLabel")
+accLabel.Size = UDim2.new(0.5, 0, 0, 22)
+accLabel.Position = UDim2.new(0.03, 0, 0, 10)
+accLabel.Text = "Accent Color"
+accLabel.TextColor3 = Settings.Theme.Accent
+accLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+accLabel.Font = Enum.Font.GothamBold
+accLabel.TextSize = 14
+accLabel.TextXAlignment = Enum.TextXAlignment.Left
+accLabel.Parent = settingsTab
+
+local accBtn = Instance.new("TextButton")
+accBtn.Size = UDim2.new(0.3, 0, 0, 24)
+accBtn.Position = UDim2.new(0.5, 0, 0, 10)
+accBtn.Text = "Change"
+accBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+accBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+accBtn.Font = Enum.Font.Gotham
+accBtn.TextSize = 12
+accBtn.Parent = settingsTab
+accBtn.MouseButton1Click:Connect(function()
+    local colors = {
+        Color3.fromRGB(255, 215, 0),
+        Color3.fromRGB(255, 0, 0),
+        Color3.fromRGB(0, 255, 0),
+        Color3.fromRGB(0, 150, 255),
+        Color3.fromRGB(255, 0, 255),
+        Color3.fromRGB(255, 165, 0),
+    }
+    for i, c in ipairs(colors) do
+        if c == Settings.Theme.Accent then
+            local next = (i % #colors) + 1
+            Settings.Theme.Accent = colors[next]
+            break
+        end
+    end
+    applyTheme()
+    saveConfig()
+end)
+
+-- Background
+local bgLabel = Instance.new("TextLabel")
+bgLabel.Size = UDim2.new(0.5, 0, 0, 22)
+bgLabel.Position = UDim2.new(0.03, 0, 0, 42)
+bgLabel.Text = "Background"
+bgLabel.TextColor3 = Settings.Theme.Accent
+bgLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+bgLabel.Font = Enum.Font.GothamBold
+bgLabel.TextSize = 14
+bgLabel.TextXAlignment = Enum.TextXAlignment.Left
+bgLabel.Parent = settingsTab
+
+local bgBtn = Instance.new("TextButton")
+bgBtn.Size = UDim2.new(0.3, 0, 0, 24)
+bgBtn.Position = UDim2.new(0.5, 0, 0, 42)
+bgBtn.Text = "Change"
+bgBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+bgBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+bgBtn.Font = Enum.Font.Gotham
+bgBtn.TextSize = 12
+bgBtn.Parent = settingsTab
+bgBtn.MouseButton1Click:Connect(function()
+    local bgColors = {
+        Color3.fromRGB(20, 20, 35),
+        Color3.fromRGB(10, 10, 20),
+        Color3.fromRGB(40, 40, 50),
+        Color3.fromRGB(30, 20, 40),
+    }
+    for i, c in ipairs(bgColors) do
+        if c == Settings.Theme.Background then
+            local next = (i % #bgColors) + 1
+            Settings.Theme.Background = bgColors[next]
+            break
+        end
+    end
+    applyTheme()
+    saveConfig()
+end)
+
+-- Floral (Toggle)
+local floralBtn = Instance.new("TextButton")
+floralBtn.Size = UDim2.new(0.45, 0, 0, 30)
+floralBtn.Position = UDim2.new(0.03, 0, 0, 76)
+floralBtn.Text = Settings.Theme.Floral and "Floral: ON" or "Floral: OFF"
+floralBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+floralBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+floralBtn.Font = Enum.Font.Gotham
+floralBtn.TextSize = 14
+floralBtn.Parent = settingsTab
+floralBtn.MouseButton1Click:Connect(function()
+    Settings.Theme.Floral = not Settings.Theme.Floral
+    floralBtn.Text = Settings.Theme.Floral and "Floral: ON" or "Floral: OFF"
+    applyTheme()
+    saveConfig()
+end)
+
+-- ===================== КОНФИГИ =====================
+local configSection = Instance.new("Frame")
+configSection.Size = UDim2.new(1, 0, 0, 140)
+configSection.Position = UDim2.new(0, 0, 0, 120)
+configSection.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0.3)
+configSection.BorderSizePixel = 1
+configSection.BorderColor3 = Color3.fromRGB(80, 80, 100)
+configSection.Parent = settingsTab
+
+local confTitle = Instance.new("TextLabel")
+confTitle.Size = UDim2.new(1, 0, 0, 22)
+confTitle.Position = UDim2.new(0, 5, 0, 2)
+confTitle.Text = "Configs"
+confTitle.TextColor3 = Settings.Theme.Accent
+confTitle.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+confTitle.Font = Enum.Font.GothamBold
+confTitle.TextSize = 14
+confTitle.TextXAlignment = Enum.TextXAlignment.Left
+confTitle.Parent = configSection
+
+local confNameBox = Instance.new("TextBox")
+confNameBox.Size = UDim2.new(0.4, 0, 0, 24)
+confNameBox.Position = UDim2.new(0.03, 0, 0, 28)
+confNameBox.Text = "config name"
+confNameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+confNameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+confNameBox.Font = Enum.Font.Gotham
+confNameBox.TextSize = 13
+confNameBox.PlaceholderText = "config name"
+confNameBox.Parent = configSection
+
+local confList = Instance.new("TextBox")
+confList.Size = UDim2.new(0.4, 0, 0, 24)
+confList.Position = UDim2.new(0.5, 0, 0, 28)
+confList.Text = "config list"
+confList.TextColor3 = Color3.fromRGB(255, 255, 255)
+confList.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+confList.Font = Enum.Font.Gotham
+confList.TextSize = 13
+confList.PlaceholderText = "config list"
+confList.Parent = configSection
+
+local function createConfigBtn(text, x, y, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.18, 0, 0, 26)
-    btn.Position = UDim2.new(0.03 + (i-1)*0.19, 0, 0, 112)
-    btn.Text = name
+    btn.Size = UDim2.new(0.15, 0, 0, 24)
+    btn.Position = UDim2.new(x, 0, y, 0)
+    btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 11
-    btn.Parent = tpTab
-    btn.MouseButton1Click:Connect(function()
-        teleportToShop(name)
-    end)
+    btn.TextSize = 12
+    btn.Parent = configSection
+    btn.MouseButton1Click:Connect(callback)
 end
 
--- Вкладка Фарм
-local farmTab = Instance.new("Frame")
-farmTab.Size = UDim2.new(1, 0, 1, 0)
-farmTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-farmTab.Visible = false
-farmTab.Parent = contentFrame
-tabContent[3] = farmTab
-
-local btnAutoFarm = Instance.new("TextButton")
-btnAutoFarm.Size = UDim2.new(0.45, 0, 0, 30)
-btnAutoFarm.Position = UDim2.new(0.03, 0, 0, 5)
-btnAutoFarm.Text = "Автофарм: Выкл"
-btnAutoFarm.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnAutoFarm.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-btnAutoFarm.Font = Enum.Font.Gotham
-btnAutoFarm.TextSize = 14
-btnAutoFarm.Parent = farmTab
-btnAutoFarm.MouseButton1Click:Connect(function()
-    Settings.AutoFarm = not Settings.AutoFarm
-    btnAutoFarm.Text = Settings.AutoFarm and "Автофарм: Вкл" or "Автофарм: Выкл"
-    if Settings.AutoFarm then
-        startAutoFarm()
-    else
-        stopAutoFarm()
-    end
+createConfigBtn("Create", 0.03, 0.62, function()
+    Settings.Configs.Current = confNameBox.Text
     saveConfig()
+    print("✅ Config saved as: " .. confNameBox.Text)
 end)
 
-local farmDelaySlider = Instance.new("TextLabel")
-farmDelaySlider.Size = UDim2.new(0.5, 0, 0, 22)
-farmDelaySlider.Position = UDim2.new(0.03, 0, 0, 42)
-farmDelaySlider.Text = "Задержка: " .. Settings.FarmDelay .. "с"
-farmDelaySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
-farmDelaySlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-farmDelaySlider.Font = Enum.Font.Gotham
-farmDelaySlider.TextSize = 14
-farmDelaySlider.TextXAlignment = Enum.TextXAlignment.Left
-farmDelaySlider.Parent = farmTab
-
-local delayBtn = Instance.new("TextButton")
-delayBtn.Size = UDim2.new(0.2, 0, 0, 24)
-delayBtn.Position = UDim2.new(0.5, 0, 0, 42)
-delayBtn.Text = "+0.2"
-delayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-delayBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-delayBtn.Font = Enum.Font.Gotham
-delayBtn.TextSize = 12
-delayBtn.Parent = farmTab
-delayBtn.MouseButton1Click:Connect(function()
-    Settings.FarmDelay = math.min(Settings.FarmDelay + 0.2, 5)
-    farmDelaySlider.Text = "Задержка: " .. Settings.FarmDelay .. "с"
+createConfigBtn("Save", 0.2, 0.62, function()
     saveConfig()
+    print("✅ Config saved")
 end)
 
-local delayBtn2 = Instance.new("TextButton")
-delayBtn2.Size = UDim2.new(0.2, 0, 0, 24)
-delayBtn2.Position = UDim2.new(0.72, 0, 0, 42)
-delayBtn2.Text = "-0.2"
-delayBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-delayBtn2.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-delayBtn2.Font = Enum.Font.Gotham
-delayBtn2.TextSize = 12
-delayBtn2.Parent = farmTab
-delayBtn2.MouseButton1Click:Connect(function()
-    Settings.FarmDelay = math.max(Settings.FarmDelay - 0.2, 0.4)
-    farmDelaySlider.Text = "Задержка: " .. Settings.FarmDelay .. "с"
-    saveConfig()
-end)
-
--- Вкладка Продажа
-local sellTab = Instance.new("Frame")
-sellTab.Size = UDim2.new(1, 0, 1, 0)
-sellTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-sellTab.Visible = false
-sellTab.Parent = contentFrame
-tabContent[4] = sellTab
-
-local btnAutoSell = Instance.new("TextButton")
-btnAutoSell.Size = UDim2.new(0.45, 0, 0, 30)
-btnAutoSell.Position = UDim2.new(0.03, 0, 0, 5)
-btnAutoSell.Text = "Автопродажа: Выкл"
-btnAutoSell.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnAutoSell.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-btnAutoSell.Font = Enum.Font.Gotham
-btnAutoSell.TextSize = 14
-btnAutoSell.Parent = sellTab
-btnAutoSell.MouseButton1Click:Connect(function()
-    Settings.AutoSell = not Settings.AutoSell
-    btnAutoSell.Text = Settings.AutoSell and "Автопродажа: Вкл" or "Автопродажа: Выкл"
-    if Settings.AutoSell then
-        startAutoSell()
-    else
-        stopAutoSell()
-    end
-    saveConfig()
-end)
-
-local sellDelaySlider = Instance.new("TextLabel")
-sellDelaySlider.Size = UDim2.new(0.5, 0, 0, 22)
-sellDelaySlider.Position = UDim2.new(0.03, 0, 0, 42)
-sellDelaySlider.Text = "Задержка: " .. Settings.SellDelay .. "с"
-sellDelaySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
-sellDelaySlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-sellDelaySlider.Font = Enum.Font.Gotham
-sellDelaySlider.TextSize = 14
-sellDelaySlider.TextXAlignment = Enum.TextXAlignment.Left
-sellDelaySlider.Parent = sellTab
-
-local sellDelayBtn = Instance.new("TextButton")
-sellDelayBtn.Size = UDim2.new(0.2, 0, 0, 24)
-sellDelayBtn.Position = UDim2.new(0.5, 0, 0, 42)
-sellDelayBtn.Text = "+0.2"
-sellDelayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-sellDelayBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-sellDelayBtn.Font = Enum.Font.Gotham
-sellDelayBtn.TextSize = 12
-sellDelayBtn.Parent = sellTab
-sellDelayBtn.MouseButton1Click:Connect(function()
-    Settings.SellDelay = math.min(Settings.SellDelay + 0.2, 5)
-    sellDelaySlider.Text = "Задержка: " .. Settings.SellDelay .. "с"
-    saveConfig()
-end)
-
-local sellDelayBtn2 = Instance.new("TextButton")
-sellDelayBtn2.Size = UDim2.new(0.2, 0, 0, 24)
-sellDelayBtn2.Position = UDim2.new(0.72, 0, 0, 42)
-sellDelayBtn2.Text = "-0.2"
-sellDelayBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-sellDelayBtn2.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-sellDelayBtn2.Font = Enum.Font.Gotham
-sellDelayBtn2.TextSize = 12
-sellDelayBtn2.Parent = sellTab
-sellDelayBtn2.MouseButton1Click:Connect(function()
-    Settings.SellDelay = math.max(Settings.SellDelay - 0.2, 0.4)
-    sellDelaySlider.Text = "Задержка: " .. Settings.SellDelay .. "с"
-    saveConfig()
-end)
-
--- Вкладка Темы
-local themeTab = Instance.new("Frame")
-themeTab.Size = UDim2.new(1, 0, 1, 0)
-themeTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-themeTab.Visible = false
-themeTab.Parent = contentFrame
-tabContent[5] = themeTab
-
-local themeList = {"Dark", "Light", "Blue", "Pink"}
-for i, th in ipairs(themeList) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.22, 0, 0, 30)
-    btn.Position = UDim2.new(0.03 + (i-1)*0.24, 0, 0, 5 + math.floor((i-1)/4)*40)
-    btn.Text = th
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = (th == Settings.Theme) and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(50, 50, 70)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.Parent = themeTab
-    btn.MouseButton1Click:Connect(function()
-        Settings.Theme = th
-        applyTheme(th)
-        saveConfig()
-        for _, b in pairs(themeTab:GetChildren()) do
-            if b:IsA("TextButton") then
-                b.BackgroundColor3 = (b.Text == th) and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(50, 50, 70)
-            end
-        end
-    end)
-end
-
--- Вкладка Конфиги
-local configTab = Instance.new("Frame")
-configTab.Size = UDim2.new(1, 0, 1, 0)
-configTab.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
-configTab.Visible = false
-configTab.Parent = contentFrame
-tabContent[6] = configTab
-
-local saveConfBtn = Instance.new("TextButton")
-saveConfBtn.Size = UDim2.new(0.45, 0, 0, 30)
-saveConfBtn.Position = UDim2.new(0.03, 0, 0, 5)
-saveConfBtn.Text = "Сохранить конфиг"
-saveConfBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-saveConfBtn.BackgroundColor3 = Color3.fromRGB(30, 150, 30)
-saveConfBtn.Font = Enum.Font.Gotham
-saveConfBtn.TextSize = 14
-saveConfBtn.Parent = configTab
-saveConfBtn.MouseButton1Click:Connect(function()
-    saveConfig()
-    print("✅ Конфиг сохранён")
-end)
-
-local loadConfBtn = Instance.new("TextButton")
-loadConfBtn.Size = UDim2.new(0.45, 0, 0, 30)
-loadConfBtn.Position = UDim2.new(0.52, 0, 0, 5)
-loadConfBtn.Text = "Загрузить конфиг"
-loadConfBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-loadConfBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
-loadConfBtn.Font = Enum.Font.Gotham
-loadConfBtn.TextSize = 14
-loadConfBtn.Parent = configTab
-loadConfBtn.MouseButton1Click:Connect(function()
+createConfigBtn("Load", 0.37, 0.62, function()
     loadConfig()
-    print("✅ Конфиг загружен")
-    -- Обновить UI
+    applyTheme()
     updateUI()
+    print("✅ Config loaded")
+end)
+
+createConfigBtn("Delete", 0.54, 0.62, function()
+    if writefile then
+        pcall(function() writefile(ConfigFileName, "") end)
+        print("🗑️ Config deleted")
+    end
 end)
 
 -- ===================== ФУНКЦИИ =====================
 
--- Телепорты
-local function teleportTo(pos)
-    if not LocalPlayer.Character then return end
-    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then hrp.CFrame = CFrame.new(pos) end
-end
-
-local function teleportToShop(name)
-    local shops = Workspace:FindFirstChild("Shops") or Workspace
-    for _, obj in pairs(shops:GetDescendants()) do
-        if obj:IsA("Model") and string.find(obj.Name, name) then
-            teleportTo(obj:GetPivot().Position)
-            return true
-        end
-    end
-    return false
-end
-
--- Поиск легендарок
 local function findLegendaries()
     local items = {}
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and string.find(obj.Name, Settings.LegendaryKeyword) then
+        if obj:IsA("Model") and string.find(obj.Name, "Legendary") then
             table.insert(items, obj)
         end
     end
     return items
 end
 
--- Получение баланса
 local function getBalance()
     local ls = LocalPlayer:FindFirstChild("leaderstats")
     if ls then
@@ -631,68 +620,24 @@ local function getBalance()
     return nil
 end
 
--- Insta Grab
+local function teleportTo(pos)
+    if not LocalPlayer.Character then return end
+    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.CFrame = CFrame.new(pos) end
+end
+
 local function instaGrab(item)
-    if not Settings.InstaGrab then return end
-    local clickDetector = item:FindFirstChild("ClickDetector")
-    if clickDetector then
-        fireclickdetector(clickDetector)
-    else
-        local remote = ReplicatedStorage:FindFirstChild("GrabItem")
-        if remote and remote:IsA("RemoteEvent") then
-            remote:FireServer(item)
-        end
-    end
+    local cd = item:FindFirstChild("ClickDetector")
+    if cd then fireclickdetector(cd) end
 end
 
--- ТП на дроп (автоматический)
-local function tpToDrop()
-    if not Settings.TPtoDrop then return end
-    local drops = {}
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and string.find(obj.Name, "Drop") then
-            table.insert(drops, obj)
-        end
-    end
-    if #drops > 0 then
-        teleportTo(drops[1]:GetPivot().Position)
-    end
-end
-
--- ESP (обновляется в цикле)
 local espObjects = {}
-local function createESP(item)
-    if espObjects[item] then return end
-    local box, corner, tracer, text
-    if Settings.ESP.Mode == "Box" or Settings.ESP.Mode == "Corner" then
-        box = Drawing.new("Square")
-        box.Color = Settings.ESP.Color
-        box.Thickness = 2
-        box.Filled = false
-        box.Visible = false
-    end
-    if Settings.ESP.Mode == "Tracer" then
-        tracer = Drawing.new("Line")
-        tracer.Color = Settings.ESP.Color
-        tracer.Thickness = 1.5
-        tracer.Visible = false
-    end
-    text = Drawing.new("Text")
-    text.Color = Color3.fromRGB(255, 255, 255)
-    text.Size = 14
-    text.Center = true
-    text.Outline = true
-    text.OutlineColor = Color3.fromRGB(0, 0, 0)
-    text.Visible = false
-    espObjects[item] = { box = box, corner = corner, tracer = tracer, text = text }
-end
-
 local function updateESP()
     if not Settings.ESP.Enabled then
         for _, esp in pairs(espObjects) do
             if esp.box then esp.box.Visible = false end
             if esp.tracer then esp.tracer.Visible = false end
-            esp.text.Visible = false
+            if esp.text then esp.text.Visible = false end
         end
         return
     end
@@ -702,25 +647,32 @@ local function updateESP()
         local pos = item:GetPivot().Position
         local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
         if onScreen then
-            createESP(item)
+            if not espObjects[item] then
+                local box = Drawing.new("Square")
+                box.Color = Settings.ESP.Color
+                box.Thickness = 2
+                box.Filled = false
+                box.Visible = false
+                local text = Drawing.new("Text")
+                text.Color = Color3.fromRGB(255, 255, 255)
+                text.Size = 14
+                text.Center = true
+                text.Outline = true
+                text.OutlineColor = Color3.fromRGB(0, 0, 0)
+                text.Visible = false
+                espObjects[item] = { box = box, text = text }
+            end
             local esp = espObjects[item]
             if Settings.ESP.Mode == "Box" then
                 local size = 3
                 esp.box.Size = Vector2.new(size * 20, size * 30)
                 esp.box.Position = Vector2.new(screenPos.X - size * 10, screenPos.Y - size * 15)
                 esp.box.Visible = true
-            elseif Settings.ESP.Mode == "Tracer" then
-                esp.tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                esp.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-                esp.tracer.Visible = true
+            else
+                esp.box.Visible = false
             end
-            local txt = ""
-            if Settings.ESP.ShowName then txt = txt .. item.Name end
-            if Settings.ESP.ShowDistance then
-                local dist = (LocalPlayer.Character and LocalPlayer.Character:GetPivot().Position - pos).Magnitude
-                txt = txt .. " [" .. math.floor(dist) .. "m]"
-            end
-            esp.text.Text = txt
+            local dist = (LocalPlayer.Character and LocalPlayer.Character:GetPivot().Position - pos).Magnitude
+            esp.text.Text = item.Name .. " [" .. math.floor(dist) .. "m]"
             esp.text.Position = Vector2.new(screenPos.X, screenPos.Y - 40)
             esp.text.Visible = true
             current[item] = true
@@ -728,182 +680,86 @@ local function updateESP()
     end
     for item, esp in pairs(espObjects) do
         if not current[item] then
-            if esp.box then esp.box.Visible = false end
-            if esp.tracer then esp.tracer.Visible = false end
+            esp.box.Visible = false
             esp.text.Visible = false
         end
     end
 end
 
--- Автофарм
-local farmRunning = false
-local farmCoroutine
-
-local function startAutoFarm()
-    if farmRunning then return end
-    farmRunning = true
-    farmCoroutine = coroutine.create(function()
-        while farmRunning do
+local lootRunning = false
+local function startAutoloot()
+    if lootRunning then return end
+    lootRunning = true
+    spawn(function()
+        while lootRunning do
             local items = findLegendaries()
             if #items > 0 then
                 for _, item in pairs(items) do
                     teleportTo(item:GetPivot().Position)
-                    if Settings.InstaGrab then
-                        instaGrab(item)
-                    end
-                    wait(Settings.FarmDelay)
+                    instaGrab(item)
+                    wait(Settings.Autoloot.Delay)
                 end
             else
                 wait(0.5)
             end
         end
     end)
-    coroutine.resume(farmCoroutine)
 end
 
-local function stopAutoFarm()
-    farmRunning = false
+local function stopAutoloot()
+    lootRunning = false
 end
 
--- Автопродажа
-local sellRunning = false
-local sellCoroutine
-
-local function startAutoSell()
-    if sellRunning then return end
-    sellRunning = true
-    sellCoroutine = coroutine.create(function()
-        while sellRunning do
-            -- Ищем в инвентаре предметы (обычно в LocalPlayer:FindFirstChild("Inventory") или в Backpack)
-            local inv = LocalPlayer:FindFirstChild("Inventory") or LocalPlayer:FindFirstChild("Backpack")
-            if inv then
-                for _, item in pairs(inv:GetChildren()) do
-                    if item:IsA("Tool") or item:IsA("Model") then
-                        -- Пытаемся продать через RemoteEvent
-                        local sellRemote = ReplicatedStorage:FindFirstChild("SellItem")
-                        if sellRemote and sellRemote:IsA("RemoteEvent") then
-                            sellRemote:FireServer(item)
-                        elseif sellRemote and sellRemote:IsA("RemoteFunction") then
-                            sellRemote:InvokeServer(item)
-                        end
-                        wait(Settings.SellDelay)
-                    end
-                end
-            end
-            wait(1)
-        end
-    end)
-    coroutine.resume(sellCoroutine)
-end
-
-local function stopAutoSell()
-    sellRunning = false
-end
-
--- Темы
-local function applyTheme(theme)
-    local colors = {
-        Dark = { bg = Color3.fromRGB(20,20,35), border = Color3.fromRGB(255,215,0), text = Color3.fromRGB(255,255,255) },
-        Light = { bg = Color3.fromRGB(220,220,230), border = Color3.fromRGB(0,0,0), text = Color3.fromRGB(0,0,0) },
-        Blue = { bg = Color3.fromRGB(10,20,50), border = Color3.fromRGB(100,180,255), text = Color3.fromRGB(255,255,255) },
-        Pink = { bg = Color3.fromRGB(50,10,40), border = Color3.fromRGB(255,100,200), text = Color3.fromRGB(255,255,255) },
-    }
-    local c = colors[theme] or colors.Dark
-    mainFrame.BackgroundColor3 = c.bg
-    mainFrame.BorderColor3 = c.border
-    title.TextColor3 = c.border
-    for _, btn in pairs(tabButtons) do
-        btn.TextColor3 = c.text
-        btn.BackgroundColor3 = Color3.fromRGB(50,50,70)
+local function applyTheme()
+    mainFrame.BackgroundColor3 = Settings.Theme.Background
+    mainFrame.BorderColor3 = Settings.Theme.Accent
+    title.TextColor3 = Settings.Theme.Accent
+    for i, btn in pairs(tabButtons) do
+        btn.BackgroundColor3 = (i == currentTab) and Settings.Theme.Accent or Color3.fromRGB(40, 40, 60)
+    end
+    if Settings.Theme.Floral then
+        -- добавить флоральный паттерн (упрощённо: меняем фон на что-то)
+        mainFrame.BackgroundColor3 = Settings.Theme.Background:Lerp(Color3.fromRGB(255, 200, 200), 0.1)
     end
 end
 
--- Обновление UI после загрузки конфига
 local function updateUI()
-    espToggle.Text = Settings.ESP.Enabled and "ESP: ВКЛ" or "ESP: ВЫКЛ"
-    modeLabel.Text = "Режим: " .. Settings.ESP.Mode
-    showName.Text = Settings.ESP.ShowName and "Имя: Вкл" or "Имя: Выкл"
-    showDist.Text = Settings.ESP.ShowDistance and "Дист.: Вкл" or "Дист.: Выкл"
-    btnNoclip.Text = Settings.Noclip and "Ноклип: Вкл" or "Ноклип: Выкл"
-    btnInstaGrab.Text = Settings.InstaGrab and "Insta Grab: Вкл" or "Insta Grab: Выкл"
-    btnTPdrop.Text = Settings.TPtoDrop and "ТП на дроп: Вкл" or "ТП на дроп: Выкл"
-    btnAutoFarm.Text = Settings.AutoFarm and "Автофарм: Вкл" or "Автофарм: Выкл"
-    btnAutoSell.Text = Settings.AutoSell and "Автопродажа: Вкл" or "Автопродажа: Выкл"
-    farmDelaySlider.Text = "Задержка: " .. Settings.FarmDelay .. "с"
-    sellDelaySlider.Text = "Задержка: " .. Settings.SellDelay .. "с"
-    applyTheme(Settings.Theme)
+    espToggle.Text = Settings.ESP.Enabled and "ESP: ON" or "ESP: OFF"
+    modeLabel.Text = "Mode: " .. Settings.ESP.Mode
+    noclipBtn.Text = Settings.Misc.Noclip and "Noclip: ON" or "Noclip: OFF"
+    speedLabel.Text = "Speed: " .. Settings.Misc.Speed
+    lootToggle.Text = Settings.Autoloot.Enabled and "Autoloot: ON" or "Autoloot: OFF"
+    delayLabel.Text = "Delay: " .. Settings.Autoloot.Delay .. "s"
+    floralBtn.Text = Settings.Theme.Floral and "Floral: ON" or "Floral: OFF"
+    applyTheme()
 end
 
--- ===================== ОСНОВНОЙ ЦИКЛ =====================
+-- ===================== ЦИКЛЫ =====================
 spawn(function()
-    while task.wait(Settings.ScanInterval) do
+    while task.wait(2) do
         local bal = getBalance()
-        if bal then balanceLabel.Text = "💰 Баланс: " .. bal .. " МБ" end
+        if bal then balLabel.Text = "💰 Balance: " .. bal .. " MB" end
         local items = findLegendaries()
-        statusLabel.Text = "📦 Легендарок: " .. #items
-        if Settings.AutoFarm then
-            farmStatus.Text = "⏳ Фарм: Вкл"
-        else
-            farmStatus.Text = "⏳ Фарм: Выкл"
-        end
+        foundLabel.Text = "📦 Legendaries: " .. #items
+        lootLabel.Text = Settings.Autoloot.Enabled and "⏳ Autoloot: ON" or "⏳ Autoloot: OFF"
     end
 end)
 
--- Обновление ESP (раз в 5 кадров)
 local frameCount = 0
 RunService.RenderStepped:Connect(function()
     frameCount = frameCount + 1
     if frameCount % 5 == 0 then
         updateESP()
-        if Settings.TPtoDrop then
-            tpToDrop()
-        end
     end
 end)
 
--- Горячие клавиши
+-- ===================== ГОРЯЧИЕ КЛАВИШИ =====================
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.CapsLock then
         screenGui.Enabled = not screenGui.Enabled
     end
-    if input.KeyCode == Enum.KeyCode.E then
-        teleportToShop("ВАРКА")
-    end
-    if input.KeyCode == Enum.KeyCode.R then
-        teleportToShop("КАРКА")
-    end
-    if input.KeyCode == Enum.KeyCode.Q then
-        Settings.InstaGrab = not Settings.InstaGrab
-        btnInstaGrab.Text = Settings.InstaGrab and "Insta Grab: Вкл" or "Insta Grab: Выкл"
-        saveConfig()
-    end
-    if input.KeyCode == Enum.KeyCode.X then
-        Settings.Noclip = not Settings.Noclip
-        btnNoclip.Text = Settings.Noclip and "Ноклип: Вкл" or "Ноклип: Выкл"
-        if Settings.Noclip then
-            local char = LocalPlayer.Character
-            if char then
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        else
-            local char = LocalPlayer.Character
-            if char then
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-            end
-        end
-        saveConfig()
-    end
 end)
 
 updateUI()
-print("✅ TSUM Utility загружен. CapsLock — открыть/закрыть UI.")
-print("E — Варка | R — Карка | Q — Insta Grab | X — Ноклип")
+print("✅ Monolith x Tsum Colaba loaded. CapsLock — toggle UI.")
