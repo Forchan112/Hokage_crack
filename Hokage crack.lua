@@ -1,5 +1,5 @@
 -- ============================================================
---              MONOLITH X TSUM  —  Colaba Style
+--              MONOLITH X TSUM  —  Colaba Style (ESP Fixed)
 -- ============================================================
 
 local Players = game:GetService("Players")
@@ -13,7 +13,7 @@ local HttpService = game:GetService("HttpService")
 
 -- ===================== НАСТРОЙКИ =====================
 local Settings = {
-    ESP = { Enabled = false, Mode = "Box", Color = Color3.fromRGB(255, 215, 0) },
+    ESP = { Enabled = false, Mode = "Box", Color = Color3.fromRGB(255, 215, 0), Keyword = "Legendary" },
     Misc = { Noclip = false, Speed = 16 },
     Autoloot = { Enabled = false, Delay = 1.2 },
     Theme = { Accent = Color3.fromRGB(255, 215, 0), Background = Color3.fromRGB(20, 20, 35), Floral = false },
@@ -65,7 +65,6 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
--- Заголовок
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -76,7 +75,6 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.Parent = mainFrame
 
--- Закрытие
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -197,6 +195,12 @@ espToggle.Parent = espTab
 espToggle.MouseButton1Click:Connect(function()
     Settings.ESP.Enabled = not Settings.ESP.Enabled
     espToggle.Text = Settings.ESP.Enabled and "ESP: ON" or "ESP: OFF"
+    if not Settings.ESP.Enabled then
+        for _, esp in pairs(espObjects) do
+            if esp.box then esp.box.Visible = false end
+            if esp.text then esp.text.Visible = false end
+        end
+    end
     saveConfig()
 end)
 
@@ -417,7 +421,6 @@ settingsTab.Visible = false
 settingsTab.Parent = contentFrame
 tabContents[5] = settingsTab
 
--- Accent Color
 local accLabel = Instance.new("TextLabel")
 accLabel.Size = UDim2.new(0.5, 0, 0, 22)
 accLabel.Position = UDim2.new(0.03, 0, 0, 10)
@@ -458,7 +461,6 @@ accBtn.MouseButton1Click:Connect(function()
     saveConfig()
 end)
 
--- Background
 local bgLabel = Instance.new("TextLabel")
 bgLabel.Size = UDim2.new(0.5, 0, 0, 22)
 bgLabel.Position = UDim2.new(0.03, 0, 0, 42)
@@ -497,7 +499,6 @@ bgBtn.MouseButton1Click:Connect(function()
     saveConfig()
 end)
 
--- Floral (Toggle)
 local floralBtn = Instance.new("TextButton")
 floralBtn.Size = UDim2.new(0.45, 0, 0, 30)
 floralBtn.Position = UDim2.new(0.03, 0, 0, 76)
@@ -594,17 +595,97 @@ createConfigBtn("Delete", 0.54, 0.62, function()
     end
 end)
 
--- ===================== ФУНКЦИИ =====================
+-- ===================== ОПТИМИЗИРОВАННЫЙ ESP =====================
+local espObjects = {}
+local espCache = {}
+local lastScanTime = 0
+local scanInterval = 0.3 -- секунд между сканами
 
-local function findLegendaries()
+local function findLegendariesCached()
+    local now = tick()
+    if now - lastScanTime < scanInterval then
+        return espCache
+    end
+    lastScanTime = now
     local items = {}
+    local keyword = Settings.ESP.Keyword or "Legendary"
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and string.find(obj.Name, "Legendary") then
+        if obj:IsA("Model") and string.find(obj.Name, keyword) then
             table.insert(items, obj)
         end
     end
+    espCache = items
     return items
 end
+
+local function updateESP()
+    if not Settings.ESP.Enabled then
+        for _, esp in pairs(espObjects) do
+            if esp.box then esp.box.Visible = false end
+            if esp.text then esp.text.Visible = false end
+        end
+        return
+    end
+
+    local items = findLegendariesCached()
+    local current = {}
+
+    for _, item in pairs(items) do
+        local pos = item:GetPivot().Position
+        local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
+        if onScreen then
+            if not espObjects[item] then
+                local box = Drawing.new("Square")
+                box.Color = Settings.ESP.Color
+                box.Thickness = 2
+                box.Filled = false
+                box.Visible = false
+                local text = Drawing.new("Text")
+                text.Color = Color3.fromRGB(255, 255, 255)
+                text.Size = 14
+                text.Center = true
+                text.Outline = true
+                text.OutlineColor = Color3.fromRGB(0, 0, 0)
+                text.Visible = false
+                espObjects[item] = { box = box, text = text }
+            end
+
+            local esp = espObjects[item]
+            local distance = (LocalPlayer.Character and LocalPlayer.Character:GetPivot().Position - pos).Magnitude
+
+            -- Обновляем только если изменилось положение или расстояние
+            if not esp.lastPos or esp.lastPos ~= pos or esp.lastDist ~= distance then
+                esp.lastPos = pos
+                esp.lastDist = distance
+
+                if Settings.ESP.Mode == "Box" then
+                    local size = 3
+                    esp.box.Size = Vector2.new(size * 20, size * 30)
+                    esp.box.Position = Vector2.new(screenPos.X - size * 10, screenPos.Y - size * 15)
+                    esp.box.Visible = true
+                else
+                    esp.box.Visible = false
+                end
+
+                esp.text.Text = item.Name .. " [" .. math.floor(distance) .. "m]"
+                esp.text.Position = Vector2.new(screenPos.X, screenPos.Y - 40)
+                esp.text.Visible = true
+            end
+
+            current[item] = true
+        end
+    end
+
+    -- Скрываем те, что не видны
+    for item, esp in pairs(espObjects) do
+        if not current[item] then
+            esp.box.Visible = false
+            esp.text.Visible = false
+        end
+    end
+end
+
+-- ===================== ФУНКЦИИ =====================
 
 local function getBalance()
     local ls = LocalPlayer:FindFirstChild("leaderstats")
@@ -631,68 +712,13 @@ local function instaGrab(item)
     if cd then fireclickdetector(cd) end
 end
 
-local espObjects = {}
-local function updateESP()
-    if not Settings.ESP.Enabled then
-        for _, esp in pairs(espObjects) do
-            if esp.box then esp.box.Visible = false end
-            if esp.tracer then esp.tracer.Visible = false end
-            if esp.text then esp.text.Visible = false end
-        end
-        return
-    end
-    local items = findLegendaries()
-    local current = {}
-    for _, item in pairs(items) do
-        local pos = item:GetPivot().Position
-        local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
-        if onScreen then
-            if not espObjects[item] then
-                local box = Drawing.new("Square")
-                box.Color = Settings.ESP.Color
-                box.Thickness = 2
-                box.Filled = false
-                box.Visible = false
-                local text = Drawing.new("Text")
-                text.Color = Color3.fromRGB(255, 255, 255)
-                text.Size = 14
-                text.Center = true
-                text.Outline = true
-                text.OutlineColor = Color3.fromRGB(0, 0, 0)
-                text.Visible = false
-                espObjects[item] = { box = box, text = text }
-            end
-            local esp = espObjects[item]
-            if Settings.ESP.Mode == "Box" then
-                local size = 3
-                esp.box.Size = Vector2.new(size * 20, size * 30)
-                esp.box.Position = Vector2.new(screenPos.X - size * 10, screenPos.Y - size * 15)
-                esp.box.Visible = true
-            else
-                esp.box.Visible = false
-            end
-            local dist = (LocalPlayer.Character and LocalPlayer.Character:GetPivot().Position - pos).Magnitude
-            esp.text.Text = item.Name .. " [" .. math.floor(dist) .. "m]"
-            esp.text.Position = Vector2.new(screenPos.X, screenPos.Y - 40)
-            esp.text.Visible = true
-            current[item] = true
-        end
-    end
-    for item, esp in pairs(espObjects) do
-        if not current[item] then
-            esp.box.Visible = false
-            esp.text.Visible = false
-        end
-    end
-end
-
 local lootRunning = false
 local function startAutoloot()
     if lootRunning then return end
     lootRunning = true
     spawn(function()
         while lootRunning do
-            local items = findLegendaries()
+            local items = findLegendariesCached()
             if #items > 0 then
                 for _, item in pairs(items) do
                     teleportTo(item:GetPivot().Position)
@@ -718,7 +744,6 @@ local function applyTheme()
         btn.BackgroundColor3 = (i == currentTab) and Settings.Theme.Accent or Color3.fromRGB(40, 40, 60)
     end
     if Settings.Theme.Floral then
-        -- добавить флоральный паттерн (упрощённо: меняем фон на что-то)
         mainFrame.BackgroundColor3 = Settings.Theme.Background:Lerp(Color3.fromRGB(255, 200, 200), 0.1)
     end
 end
@@ -739,16 +764,17 @@ spawn(function()
     while task.wait(2) do
         local bal = getBalance()
         if bal then balLabel.Text = "💰 Balance: " .. bal .. " MB" end
-        local items = findLegendaries()
+        local items = findLegendariesCached()
         foundLabel.Text = "📦 Legendaries: " .. #items
         lootLabel.Text = Settings.Autoloot.Enabled and "⏳ Autoloot: ON" or "⏳ Autoloot: OFF"
     end
 end)
 
+-- Обновление ESP с ограничением частоты (каждые 3 кадра)
 local frameCount = 0
 RunService.RenderStepped:Connect(function()
     frameCount = frameCount + 1
-    if frameCount % 5 == 0 then
+    if frameCount % 3 == 0 then
         updateESP()
     end
 end)
@@ -762,4 +788,4 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 updateUI()
-print("✅ Monolith x Tsum Colaba loaded. CapsLock — toggle UI.")
+print("✅ Monolith x Tsum Colaba (ESP Fixed) loaded. CapsLock — toggle UI.")
